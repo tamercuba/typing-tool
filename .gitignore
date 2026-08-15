@@ -1,0 +1,36 @@
+# --- Clojure / ClojureScript ---
+.cpcache/
+.clj-kondo/.cache/
+.lsp/
+.nrepl-port
+.rebel_readline_history
+.lein-repl-history
+target/
+classes/
+
+# shadow-cljs
+.shadow-cljs/
+public/js/
+
+# --- Node / npm / yarn ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- nix / direnv ---
+.direnv/
+result/
+# .envrc            # usually shared; uncomment if it holds local secrets
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+*.iml
+
+# --- logs / misc ---
+*.log

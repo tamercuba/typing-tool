@@ -1,0 +1,16 @@
+{
+  "name": "typing-tool",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "watch": "shadow-cljs watch app",
+    "repl": "shadow-cljs cljs-repl app"
+  },
+  "dependencies": {
+    "react": "19",
+    "react-dom": "19"
+  },
+  "devDependencies": {
+    "shadow-cljs": "^3.4.12"
+  }
+}

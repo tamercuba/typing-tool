@@ -1,0 +1,14 @@
+{:source-paths ["src"]
+ :dependencies [[reagent/reagent "2.0.1"]]
+ :builds {:app {:target :browser
+                :output-dir "public/js"
+                :asset-path "/js"
+                :modules {:main {:entries [typing-tool.core]
+                                 :init-fn typing-tool.core/init}}
+                :devtools {:http-root "public"
+                           :http-port 8080
+                           :repl-port 8081
+                           :repl-require [shadow.cljs.devtools.client.browser]}}}
+
+ :nrepl {:port 7888
+         :middleware [cider.piggieback/wrap-cljs-repl]}}
