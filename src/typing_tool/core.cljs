@@ -25,13 +25,15 @@
    :result       []
    :wrong-result []
    :index        0
-   :errors       0})
+   :errors       0
+   :finished?    false})
 
-(defn handle-char [s k correct-char]
+(defn handle-char [s k correct-char last?]
   (if (= k correct-char)
     (swap! s #(-> %
                   (update :index  inc)
-                  (update :result conj k)))
+                  (update :result conj k)
+                  (assoc :finished? last?)))
     (swap! s #(-> %
                   (update :wrong-result conj k)
                   (update :errors inc)))))
@@ -47,37 +49,73 @@
              :else              v))))
 
 (defn handle-key-pressed [s event]
-  (let [{:keys [base index]} @s
-        k           (.-key event)
-        correct-key (when (< index (count base)) (nth base index))]
-    (cond
-      (contains? no-op-keys k) nil
-      (= k "Backspace")       (backspace s)
-      correct-key             (handle-char s k correct-key))))
+  (if (:finished? @s)
+    nil
+    (let [{:keys [base index result]} @s
+          k                    (.-key event)
+          k                    (if (= k "Enter") "\n" k)
+          correct-key          (when (< index (count base)) (nth base index))
+          last?                (= (count base) (inc (count result)))]
+      (cond
+        (contains? no-op-keys k) nil
+        (= k "Backspace")       (backspace s)
+        correct-key             (handle-char s k correct-key last?)))))
 
 (defn errors [s]
   (let [errors-count (:errors @s)]
-    (println errors-count)
     (if (pos? errors-count)
       [:p (str "Voce cometeu " errors-count " erros :(")] nil)))
 
+(defn finished [s input-ref]
+  (let [{:keys [finished? errors base]} @s]
+    (when finished?
+      [:div
+       [:p (str "PARABÉNS! Você terminou com apenas " errors " erros.")]
+       [:button {:on-click (fn []
+                             (reset! s (->state (str/join base)))
+                             (some-> @input-ref .focus))}
+        "Reiniciar"]])))
+
+(defn placeholder [c]
+  (cond
+    (= c " ")  "·"
+    (= c "\n") (str "↵" "\n")
+    :else      c))
+
+(defn placeholder? [c]
+  (or (= c " ") (= c "\n")))
+
+(defn remaining-char [c]
+  (if (= c " ") "·" c))
+
 (defn typing [text]
-  (r/with-let [content (r/atom (->state text))]
-    (let [{:keys [base index result wrong-result]} @content]
+  (r/with-let [content   (r/atom (->state text))
+               input-ref (r/atom nil)]
+    (let [{:keys [base index result wrong-result]} @content
+          current (nth base index "")]
       [:div
        [:p
-        [:span {:style {:background-color "grey" :color "green"}} (str/join result)]
-        [:span {:style {:background-color "grey" :color "red"}}   (str/join wrong-result)]
-        [:span {:style {:background-color "grey" :color "black" :text-decoration "underline"}} (nth base index "")]
-        [:span {:style {:background-color "grey" :color "black"}} (str/join (drop (inc index) base))]]
-       [:input {:type        "text"
+        [:span.char.correct (str/join result)]
+        [:span.char.wrong   (str/join wrong-result)]
+        [:span {:class (str "char current" (when (placeholder? current) " placeholder"))}
+         (placeholder current)]
+        (map-indexed
+         (fn [i c]
+           [:span {:class (str "char" (when (= c " ") " placeholder"))
+                   :key i}
+            (remaining-char c)])
+         (drop (inc index) base))]
+       [:input {:ref #(reset! input-ref %)
+                :type "text"
+                :class "typing-input"
+                :auto-focus true
                 :on-key-down (partial handle-key-pressed content)}]
-       [errors content]])))
+       [errors content]
+       [finished content input-ref]])))
 
 (r/defc app []
   [:div
-   [:h1 "Olá, mundo!"]
-   [typing "Eu te amo MUITO!"]])
+   [typing "Eu te amo MUITO! \n aaa"]])
 
 (defonce root (rdc/create-root (js/document.getElementById "app")))
 
